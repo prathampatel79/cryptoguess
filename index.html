@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0516">
+  <meta name="description" content="CryptoGuess: Crack the Clue - a timed cryptography-inspired word investigation game for MGM SYNERGY 2026.">
+  <title>CryptoGuess // Crack the Clue</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+  <div class="ambient-grid" aria-hidden="true"></div>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <button class="brand" id="brand-home" type="button" aria-label="CryptoGuess home">
+      <span class="brand-mark" aria-hidden="true">CG</span>
+      <span class="brand-copy">
+        <strong>CRYPTOGUESS</strong>
+        <small>CRACK THE CLUE</small>
+      </span>
+    </button>
+    <div class="header-actions">
+      <button class="header-btn" id="how-button" type="button" aria-haspopup="dialog">
+        <span class="header-btn-icon" aria-hidden="true">?</span>
+        <span class="header-btn-label">How to play</span>
+      </button>
+      <button class="header-btn" id="leaderboard-button" type="button" aria-haspopup="dialog">
+        <span class="header-btn-icon" aria-hidden="true">#</span>
+        <span class="header-btn-label">Leaderboard</span>
+      </button>
+      <button class="header-btn" id="header-achievements-button" type="button" aria-haspopup="dialog">
+        <span class="header-btn-icon" aria-hidden="true">★</span>
+        <span class="header-btn-label">Badges</span>
+      </button>
+      <button class="icon-btn" id="sound-button" type="button" aria-label="Mute sound effects" aria-pressed="false">
+        <span class="sound-icon" aria-hidden="true">))</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="view landing-view" id="landing-view" aria-labelledby="landing-title" tabindex="-1">
+      <div class="landing-hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="pulse-dot" aria-hidden="true"></span> ENCRYPTED WORD PROTOCOL // MGM SYNERGY 2026</p>
+          <h1 class="hero-title" id="landing-title">
+            <span class="title-line">CRYPTO</span>
+            <span class="title-line title-accent">GUESS</span>
+          </h1>
+          <p class="hero-tagline">Crack the clue. Decrypt the word.</p>
+          <p class="hero-lede">A timed word investigation built for quick minds and sharp instincts. Read the intercepted clue, break the code, and claim your place on the board.</p>
+          <div class="hero-stats" aria-label="Game facts">
+            <div class="hero-stat">
+              <strong id="bank-count">300</strong>
+              <span>WORDS IN VAULT</span>
+            </div>
+            <div class="hero-stat">
+              <strong>4</strong>
+              <span>CLEARANCE LEVELS</span>
+            </div>
+            <div class="hero-stat">
+              <strong id="dictionary-count">1,762</strong>
+              <span>VALID GUESSES</span>
+            </div>
+          </div>
+          <div class="event-badge">
+            <span class="event-badge-kicker">LIVE EXHIBIT</span>
+            <span>MGM SYNERGY 2026 <b>//</b> 28 OCT 2026</span>
+          </div>
+        </div>
+
+        <div class="access-panel corner-frame">
+          <div class="panel-head">
+            <div>
+              <p class="panel-kicker">ACCESS TERMINAL</p>
+              <h2>Open a new case</h2>
+            </div>
+            <span class="status-light" aria-hidden="true"></span>
+          </div>
+
+          <form id="start-form" novalidate>
+            <div class="field-group">
+              <label for="nickname">OPERATIVE NAME</label>
+              <div class="input-wrap">
+                <span class="input-prefix" aria-hidden="true">&gt;</span>
+                <input id="nickname" name="nickname" type="text" maxlength="16" minlength="2" autocomplete="nickname" placeholder="ENTER NICKNAME" aria-describedby="nickname-help nickname-error" required>
+              </div>
+              <p id="nickname-help" class="field-help">2-16 characters. Public display name. No account needed.</p>
+              <p id="nickname-error" class="field-error" role="alert"></p>
+            </div>
+
+            <fieldset class="difficulty-fieldset">
+              <legend>SELECT CLEARANCE</legend>
+              <div class="difficulty-grid">
+                <label class="difficulty-card">
+                  <input type="radio" name="difficulty" value="easy" checked>
+                  <span class="difficulty-inner">
+                    <span class="difficulty-top"><b>01</b><span class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
+                    <strong>EASY</strong>
+                    <span class="difficulty-spec">4-5 letters · 6 tries · 2:00</span>
+                  </span>
+                </label>
+                <label class="difficulty-card">
+                  <input type="radio" name="difficulty" value="medium">
+                  <span class="difficulty-inner">
+                    <span class="difficulty-top"><b>02</b><span class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
+                    <strong>MEDIUM</strong>
+                    <span class="difficulty-spec">5-6 letters · 6 tries · 1:40</span>
+                  </span>
+                </label>
+                <label class="difficulty-card">
+                  <input type="radio" name="difficulty" value="hard">
+                  <span class="difficulty-inner">
+                    <span class="difficulty-top"><b>03</b><span class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
+                    <strong>HARD</strong>
+                    <span class="difficulty-spec">6-7 letters · 5 tries · 1:20</span>
+                  </span>
+                </label>
+                <label class="difficulty-card">
+                  <input type="radio" name="difficulty" value="expert">
+                  <span class="difficulty-inner">
+                    <span class="difficulty-top"><b>04</b><span class="signal-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></span>
+                    <strong>EXPERT</strong>
+                    <span class="difficulty-spec">7-9 letters · 5 tries · 1:05</span>
+                  </span>
+                </label>
+              </div>
+            </fieldset>
+
+            <button class="btn btn-primary btn-full" type="submit" id="start-button">
+              <span>INITIATE CHALLENGE</span>
+              <span class="btn-arrow" aria-hidden="true">→</span>
+            </button>
+            <button class="btn btn-daily btn-full" type="button" id="daily-start-button">
+              <span class="daily-plus" aria-hidden="true">+</span>
+              <span>DAILY CIPHER</span>
+              <small id="daily-date">-- OCT</small>
+            </button>
+          </form>
+
+          <div class="panel-footer">
+            <div class="panel-mini-stat">
+              <span>PERSONAL BEST</span>
+              <strong id="landing-best">—</strong>
+            </div>
+            <div class="panel-mini-stat">
+              <span>CURRENT STREAK</span>
+              <strong><span id="landing-streak">0</span><small> wins</small></strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="feature-strip" aria-label="Game features">
+        <div class="feature-item">
+          <span class="feature-index">01</span>
+          <div>
+            <strong>READ THE SIGNAL</strong>
+            <p>Every case begins with a clue. Decode it before the clock runs dry.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-index">02</span>
+          <div>
+            <strong>TEST THE PATTERN</strong>
+            <p>Green locks a letter in place. Amber means it belongs elsewhere. Red is a dead end.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <span class="feature-index">03</span>
+          <div>
+            <strong>BREAK THE CASE</strong>
+            <p>Two decryption aids. One streak. A leaderboard that remembers your best work.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view game-view" id="game-view" aria-labelledby="game-mode-name" tabindex="-1" hidden>
+      <div class="game-topline">
+        <button class="text-btn back-btn" id="exit-round-button" type="button">
+          <span aria-hidden="true">←</span> ABORT CASE
+        </button>
+        <div class="case-chip">
+          <span class="case-chip-label">CLEARANCE</span>
+          <strong id="game-mode-name">EASY</strong>
+          <span class="case-chip-divider" aria-hidden="true"></span>
+          <span id="case-number">CASE 01</span>
+        </div>
+        <div class="game-tools">
+          <button class="header-btn" id="game-leaderboard-button" type="button" aria-haspopup="dialog">
+            <span class="header-btn-icon" aria-hidden="true">#</span>
+            <span class="header-btn-label">Rankings</span>
+          </button>
+          <button class="header-btn" id="achievements-button" type="button" aria-haspopup="dialog">
+            <span class="header-btn-icon" aria-hidden="true">★</span>
+            <span class="header-btn-label">Badges</span>
+          </button>
+          <button class="icon-btn" id="sound-button-game" type="button" aria-label="Mute sound effects" aria-pressed="false">
+            <span class="sound-icon" aria-hidden="true">))</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="status-strip" aria-label="Round status">
+        <div class="status-cell">
+          <span class="status-label">SCORE</span>
+          <strong class="status-value" id="score-value">0000</strong>
+        </div>
+        <div class="status-cell status-timer" id="timer-cell">
+          <span class="status-label">TIME LEFT</span>
+          <strong class="status-value" id="timer-value">02:00</strong>
+          <span class="timer-track" aria-hidden="true"><span id="timer-fill"></span></span>
+        </div>
+        <div class="status-cell">
+          <span class="status-label">ATTEMPTS</span>
+          <strong class="status-value" id="attempt-value">0 / 6</strong>
+        </div>
+        <div class="status-cell">
+          <span class="status-label">STREAK</span>
+          <strong class="status-value"><span id="streak-value">0</span><small> WINS</small></strong>
+        </div>
+      </div>
+
+      <div class="game-stage">
+        <div class="play-column">
+          <div class="clue-panel corner-frame">
+            <div class="clue-panel-head">
+              <span class="clue-label"><span class="clue-signal" aria-hidden="true"></span> INTERCEPTED CLUE</span>
+              <span class="word-length" id="word-length">5 LETTERS</span>
+            </div>
+            <p class="clue-text" id="clue-text">Loading encrypted clue...</p>
+            <div class="hint-output" id="hint-output" role="status" hidden>
+              <span class="hint-output-label">DECRYPTION AID</span>
+              <p id="hint-output-text"></p>
+            </div>
+          </div>
+
+          <div class="hint-dock">
+            <div class="hint-dock-head">
+              <span>DECRYPTION AIDS</span>
+              <span class="hint-tokens">TOKENS <strong id="hint-token-count">2</strong>/2</span>
+            </div>
+            <div class="hint-actions">
+              <button class="hint-btn" id="hint-letter-button" type="button">
+                <span class="hint-btn-icon" aria-hidden="true">A</span>
+                <span class="hint-btn-copy"><strong>FIRST LETTER</strong><small id="hint-letter-cost">-10 PTS</small></span>
+              </button>
+              <button class="hint-btn" id="hint-clue-button" type="button">
+                <span class="hint-btn-icon" aria-hidden="true">?</span>
+                <span class="hint-btn-copy"><strong>EXTRA CLUE</strong><small id="hint-clue-cost">-10 PTS</small></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="board-wrap">
+            <div class="board" id="board" role="grid" aria-label="Guess board" aria-rowcount="6"></div>
+            <div class="board-message" id="game-message" role="status" aria-live="polite"></div>
+          </div>
+
+          <form class="guess-form" id="guess-form" autocomplete="off" novalidate>
+            <label class="guess-label" for="guess-input">Transmit a guess</label>
+            <div class="guess-field">
+              <span class="guess-caret" aria-hidden="true">&gt;</span>
+              <input
+                id="guess-input"
+                name="guess"
+                type="text"
+                maxlength="9"
+                placeholder="TYPE A WORD"
+                autocomplete="off"
+                autocapitalize="characters"
+                autocorrect="off"
+                spellcheck="false"
+                aria-describedby="game-message"
+                disabled
+              >
+              <button class="guess-submit" id="guess-submit" type="submit" disabled>
+                ENTER <span aria-hidden="true">↵</span>
+              </button>
+            </div>
+            <p class="guess-help">Type your answer and press <kbd>ENTER</kbd> to transmit — physical keyboard and on-screen keys both work.</p>
+          </form>
+
+          <div class="keyboard" id="keyboard" aria-label="On-screen keyboard"></div>
+          <p class="keyboard-help"><kbd>ENTER</kbd> submit <span aria-hidden="true">/</span> <kbd>BACKSPACE</kbd> delete <span aria-hidden="true">/</span> physical keyboard supported</p>
+        </div>
+
+        <aside class="side-column" aria-label="Round intelligence">
+          <div class="side-card">
+            <div class="side-card-head">
+              <span>ROUND INTEL</span>
+              <span class="tiny-status">LIVE</span>
+            </div>
+            <div class="intel-row">
+              <span>Guesses left</span>
+              <strong id="guesses-left">6</strong>
+            </div>
+            <div class="intel-row">
+              <span>Hints used</span>
+              <strong id="hints-used">0</strong>
+            </div>
+            <div class="intel-row">
+              <span>Best possible</span>
+              <strong id="max-score">—</strong>
+            </div>
+            <div class="progress-block">
+              <div class="progress-label">
+                <span>TRANSMISSION PROGRESS</span>
+                <span id="progress-text">0 / 6</span>
+              </div>
+              <div class="progress-dots" id="progress-dots" aria-hidden="true"></div>
+            </div>
+          </div>
+
+          <div class="side-card daily-brief" id="daily-brief" hidden>
+            <div class="side-card-head">
+              <span>DAILY CIPHER</span>
+              <span class="tiny-status">GLOBAL</span>
+            </div>
+            <p>Every operative receives the same encrypted word on <strong id="daily-brief-date">today</strong>. Solve it before the date rolls over.</p>
+          </div>
+
+          <div class="side-card side-note">
+            <div class="side-card-head">
+              <span>CASE NOTES</span>
+              <span class="tiny-status">INTEL</span>
+            </div>
+            <ul class="note-list">
+              <li><span class="tile-swatch correct" aria-hidden="true"></span> Exact position confirmed</li>
+              <li><span class="tile-swatch present" aria-hidden="true"></span> In the word, wrong position</li>
+              <li><span class="tile-swatch absent" aria-hidden="true"></span> Letter not in the word</li>
+            </ul>
+            <p class="muted-note">Repeated letters are tracked carefully. No false positives.</p>
+          </div>
+
+          <div class="side-card score-note">
+            <div class="side-card-head">
+              <span>SCORE PROTOCOL</span>
+              <span class="tiny-status">BONUS</span>
+            </div>
+            <p>Solve fast, save guesses, and skip hints to maximise your score. Failed cases earn zero completion points.</p>
+            <button class="inline-link" id="side-how-button" type="button">View full scoring →</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>CRYPTOGUESS // CRACK THE CLUE</span>
+    <span class="footer-divider" aria-hidden="true">◆</span>
+    <span>MGM SYNERGY 2026</span>
+    <span class="footer-divider" aria-hidden="true">◆</span>
+    <span>LOCAL-FIRST · NO TRACKERS</span>
+  </footer>
+
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite" aria-atomic="true"></div>
+
+  <dialog class="modal result-modal" id="result-dialog" aria-labelledby="result-title">
+    <div class="modal-shell">
+      <button class="modal-close" type="button" data-close-dialog aria-label="Close results">×</button>
+      <p class="result-signal" id="result-signal">ACCESS GRANTED</p>
+      <h2 id="result-title">WORD DECRYPTED</h2>
+      <p class="result-subtitle" id="result-subtitle">Clean work, operative.</p>
+      <div class="result-unlocks" id="result-unlocks" hidden>
+        <span>NEW BADGES UNLOCKED</span>
+        <p id="result-unlocks-text"></p>
+      </div>
+
+      <div class="result-word-block">
+        <span>DECRYPTED KEY</span>
+        <strong id="result-word">—</strong>
+        <p id="result-definition"></p>
+      </div>
+
+      <div class="result-grid">
+        <div>
+          <span>ROUND SCORE</span>
+          <strong id="result-score">0</strong>
+        </div>
+        <div>
+          <span>TIME LEFT</span>
+          <strong id="result-time">00:00</strong>
+        </div>
+        <div>
+          <span>ATTEMPTS</span>
+          <strong id="result-attempts">0 / 6</strong>
+        </div>
+      </div>
+
+      <div class="score-breakdown" id="score-breakdown">
+        <button class="breakdown-toggle" type="button" id="breakdown-toggle" aria-expanded="false" aria-controls="breakdown-lines">
+          <span>Score breakdown</span>
+          <span aria-hidden="true">+</span>
+        </button>
+        <div class="breakdown-lines" id="breakdown-lines" hidden></div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary" type="button" id="next-round-button">NEXT CASE <span aria-hidden="true">→</span></button>
+        <button class="btn btn-secondary" type="button" id="share-result-button">SHARE RESULT</button>
+        <button class="btn btn-quiet" type="button" id="result-leaderboard-button">RANKINGS</button>
+      </div>
+      <button class="text-btn result-home" type="button" id="result-home-button">RETURN TO TERMINAL</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal leaderboard-modal" id="leaderboard-dialog" aria-labelledby="leaderboard-title">
+    <div class="modal-shell">
+      <button class="modal-close" type="button" data-close-dialog aria-label="Close leaderboard">×</button>
+      <p class="panel-kicker">PUBLIC ARCHIVE</p>
+      <h2 id="leaderboard-title">Leaderboard</h2>
+      <p class="modal-lede">Top 10 scores. Local records stay on this device. Cloud records appear when configured.</p>
+
+      <div class="board-tabs" role="tablist" aria-label="Leaderboard difficulty">
+        <button class="board-tab is-active" type="button" role="tab" aria-selected="true" data-board-filter="all">ALL</button>
+        <button class="board-tab" type="button" role="tab" aria-selected="false" data-board-filter="easy">EASY</button>
+        <button class="board-tab" type="button" role="tab" aria-selected="false" data-board-filter="medium">MEDIUM</button>
+        <button class="board-tab" type="button" role="tab" aria-selected="false" data-board-filter="hard">HARD</button>
+        <button class="board-tab" type="button" role="tab" aria-selected="false" data-board-filter="expert">EXPERT</button>
+        <button class="board-tab" type="button" role="tab" aria-selected="false" data-board-filter="daily">DAILY</button>
+      </div>
+
+      <div class="cloud-status" id="cloud-status">
+        <span class="cloud-dot" aria-hidden="true"></span>
+        <span id="cloud-status-text">Local archive active</span>
+      </div>
+
+      <div class="leaderboard-wrap">
+        <table class="leaderboard-table">
+          <thead>
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">OPERATIVE</th>
+              <th scope="col">SCORE</th>
+              <th scope="col">MODE</th>
+              <th scope="col">TIME</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+        <p class="empty-state" id="leaderboard-empty" hidden>No scores in this channel yet. Be the first operative on the board.</p>
+      </div>
+
+      <div class="personal-best-box">
+        <div>
+          <span>YOUR PERSONAL BEST</span>
+          <strong id="leaderboard-personal-best">No case cleared yet</strong>
+        </div>
+        <div>
+          <span>CURRENT STREAK</span>
+          <strong id="leaderboard-streak">0 wins</strong>
+        </div>
+      </div>
+      <p class="cloud-note" id="cloud-note">Shared cloud rankings are optional. Configure <code>js/firebase-config.js</code> to enable them.</p>
+    </div>
+  </dialog>
+
+  <dialog class="modal achievements-modal" id="achievements-dialog" aria-labelledby="achievements-title">
+    <div class="modal-shell">
+      <button class="modal-close" type="button" data-close-dialog aria-label="Close achievements">×</button>
+      <p class="panel-kicker">OPERATIVE RECORD</p>
+      <h2 id="achievements-title">Badges</h2>
+      <p class="modal-lede">Milestones earned across every case you crack.</p>
+      <div class="achievement-summary" id="achievement-summary">0 / 10 unlocked</div>
+      <div class="achievement-grid" id="achievement-grid"></div>
+    </div>
+  </dialog>
+
+  <dialog class="modal how-modal" id="how-dialog" aria-labelledby="how-title">
+    <div class="modal-shell">
+      <button class="modal-close" type="button" data-close-dialog aria-label="Close instructions">×</button>
+      <p class="panel-kicker">FIELD MANUAL</p>
+      <h2 id="how-title">How to play</h2>
+      <div class="how-grid">
+        <section>
+          <span class="how-index">01</span>
+          <h3>Read the clue</h3>
+          <p>Each case hides one answer behind a single clue. The number of blocks shows how many letters it contains.</p>
+        </section>
+        <section>
+          <span class="how-index">02</span>
+          <h3>Submit a guess</h3>
+          <p>Type with the on-screen or physical keyboard. Every guess must be a real word from the game dictionary; invalid words do not use an attempt.</p>
+        </section>
+        <section>
+          <span class="how-index">03</span>
+          <h3>Read the colours</h3>
+          <p><b class="text-correct">Green</b> means the letter and position are correct. <b class="text-present">Amber</b> means the letter exists elsewhere. <b class="text-absent">Red</b> means it is not in the answer.</p>
+        </section>
+        <section>
+          <span class="how-index">04</span>
+          <h3>Use your aids</h3>
+          <p>Two hint tokens are available each round. Reveal the first letter or unlock an extra clue. Each hint reduces your final score.</p>
+        </section>
+        <section>
+          <span class="how-index">05</span>
+          <h3>Beat the clock</h3>
+          <p>You win when you decode the word before the timer or attempts run out. Solve quickly with unused guesses and no hints for the biggest score.</p>
+        </section>
+        <section>
+          <span class="how-index">06</span>
+          <h3>Build your record</h3>
+          <p>Win consecutive cases to grow a streak, unlock badges, and keep your personal best. Rankings can be filtered by difficulty and daily cipher.</p>
+        </section>
+      </div>
+      <div class="score-formula">
+        <span>SCORE FORMULA</span>
+        <code>base + (unused guesses × bonus) + (10s blocks left × rate) + no-hint bonus − (hints × penalty)</code>
+        <p>Unsuccessful cases score 0 completion points. Every hint is optional.</p>
+      </div>
+      <button class="btn btn-primary btn-full" type="button" data-close-dialog>UNDERSTOOD</button>
+    </div>
+  </dialog>
+
+  <dialog class="modal confirm-modal" id="leave-dialog" aria-labelledby="leave-title">
+    <div class="modal-shell">
+      <button class="modal-close" type="button" data-close-dialog aria-label="Cancel leaving">×</button>
+      <p class="panel-kicker">ABORT PROTOCOL</p>
+      <h2 id="leave-title">Leave this case?</h2>
+      <p class="modal-lede">The current round will be abandoned and will not be scored or added to the leaderboard.</p>
+      <div class="result-actions">
+        <button class="btn btn-quiet" type="button" id="resume-round-button">RESUME CASE</button>
+        <button class="btn btn-danger" type="button" id="confirm-leave-button">ABORT CASE</button>
+      </div>
+    </div>
+  </dialog>
+
+  <noscript>
+    <div class="noscript-banner">CryptoGuess requires JavaScript to run. Please enable JavaScript and reload the page.</div>
+  </noscript>
+
+  <script src="js/words.js"></script>
+  <script src="js/game-logic.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cloud.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
