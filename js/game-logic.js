@@ -149,6 +149,11 @@
     return normalized.length === expectedLength && dictionary.has(normalized);
   }
 
+  function isGuessFormatValid(guess, expectedLength) {
+    const raw = String(guess == null ? "" : guess).toUpperCase();
+    return raw.length === expectedLength && /^[A-Z]+$/.test(raw);
+  }
+
   function getModePool(words, modeKey) {
     const mode = MODES[modeKey];
     if (!mode) {
@@ -174,6 +179,176 @@
     }
     const index = Math.floor((random || Math.random)() * available.length);
     return available[Math.min(index, available.length - 1)];
+  }
+
+  function shuffleList(list, random) {
+    const source = (list || []).slice();
+    const rng = typeof random === "function" ? random : Math.random;
+    for (let index = source.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(rng() * (index + 1));
+      const temp = source[index];
+      source[index] = source[swapIndex];
+      source[swapIndex] = temp;
+    }
+    return source;
+  }
+
+  function getQuestionId(word) {
+    const answer = normalizeWord(word && word.answer);
+    const clue = String((word && word.clue) || "");
+    return (answer || "UNKNOWN") + "-" + hashString(answer + "|" + clue).toString(36);
+  }
+
+  function createQuestionDeck(words, options) {
+    const opts = options || {};
+    const sourceWords = Array.isArray(words) ? words : [];
+    const random = typeof opts.random === "function" ? opts.random : Math.random;
+    const storage = opts.storage || null;
+    const storageKey = opts.storageKey || "cryptoguess.questionDeck.v1";
+    const wordById = new Map();
+    const decks = Object.create(null);
+
+    sourceWords.forEach(function (word) {
+      const id = getQuestionId(word);
+      if (!wordById.has(id)) {
+        wordById.set(id, word);
+      }
+    });
+
+    function readDeck(modeKey) {
+      if (decks[modeKey]) {
+        return decks[modeKey];
+      }
+      if (!storage || typeof storage.getItem !== "function") {
+        return null;
+      }
+      try {
+        const raw = storage.getItem(storageKey + "." + modeKey);
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function writeDeck(modeKey, deck) {
+      decks[modeKey] = deck;
+      if (!storage || typeof storage.setItem !== "function") {
+        return;
+      }
+      try {
+        storage.setItem(storageKey + "." + modeKey, JSON.stringify(deck));
+      } catch (error) {
+        // In-memory deck still prevents repeats for this session.
+      }
+    }
+
+    function poolIdsFor(modeKey) {
+      const ids = [];
+      const seen = new Set();
+      getModePool(sourceWords, modeKey).forEach(function (word) {
+        const id = getQuestionId(word);
+        if (wordById.has(id) && !seen.has(id)) {
+          seen.add(id);
+          ids.push(id);
+        }
+      });
+      return ids;
+    }
+
+    function normalizeDeck(raw, poolIds) {
+      if (!raw || typeof raw !== "object") {
+        return {
+          queue: shuffleList(poolIds, random),
+          seen: [],
+          lastId: null,
+          cycle: 0
+        };
+      }
+
+      const valid = new Set(poolIds);
+      const seen = [];
+      const seenSet = new Set();
+      const queue = [];
+      const queueSet = new Set();
+
+      (Array.isArray(raw.seen) ? raw.seen : []).forEach(function (id) {
+        if (valid.has(id) && !seenSet.has(id)) {
+          seenSet.add(id);
+          seen.push(id);
+        }
+      });
+      (Array.isArray(raw.queue) ? raw.queue : []).forEach(function (id) {
+        if (valid.has(id) && !seenSet.has(id) && !queueSet.has(id)) {
+          queueSet.add(id);
+          queue.push(id);
+        }
+      });
+
+      const newIds = poolIds.filter(function (id) {
+        return !seenSet.has(id) && !queueSet.has(id);
+      });
+      shuffleList(newIds, random).forEach(function (id) {
+        queueSet.add(id);
+        queue.push(id);
+      });
+
+      const lastId = valid.has(raw.lastId)
+        ? raw.lastId
+        : (seen.length ? seen[seen.length - 1] : null);
+      const cycle = Number.isFinite(Number(raw.cycle))
+        ? Math.max(0, Math.floor(Number(raw.cycle)))
+        : 0;
+
+      return {
+        queue: queue,
+        seen: seen,
+        lastId: lastId,
+        cycle: cycle
+      };
+    }
+
+    function draw(modeKey) {
+      const poolIds = poolIdsFor(modeKey);
+      if (!poolIds.length) {
+        return null;
+      }
+
+      const deck = normalizeDeck(readDeck(modeKey), poolIds);
+
+      if (!deck.queue.length) {
+        const lastId = deck.lastId;
+        const candidates = shuffleList(poolIds, random);
+        if (candidates.length > 1 && candidates[0] === lastId) {
+          const swapIndex = 1 + Math.floor(random() * (candidates.length - 1));
+          const temp = candidates[0];
+          candidates[0] = candidates[swapIndex];
+          candidates[swapIndex] = temp;
+        }
+        deck.queue = candidates;
+        deck.seen = [];
+        deck.cycle += 1;
+      }
+
+      let id = deck.queue.shift();
+      if (id === deck.lastId && deck.queue.length) {
+        deck.queue.push(id);
+        id = deck.queue.shift();
+      }
+      if (!wordById.has(id)) {
+        id = poolIds[0];
+      }
+      if (deck.seen.indexOf(id) === -1) {
+        deck.seen.push(id);
+      }
+      deck.lastId = id;
+      writeDeck(modeKey, deck);
+      return wordById.get(id) || null;
+    }
+
+    return {
+      draw: draw,
+      getPoolIds: poolIdsFor
+    };
   }
 
   function hashString(value) {
@@ -309,8 +484,12 @@
     isSolved: isSolved,
     buildDictionary: buildDictionary,
     isValidGuess: isValidGuess,
+    isGuessFormatValid: isGuessFormatValid,
     getModePool: getModePool,
     pickWord: pickWord,
+    shuffleList: shuffleList,
+    getQuestionId: getQuestionId,
+    createQuestionDeck: createQuestionDeck,
     hashString: hashString,
     getUtcDateKey: getUtcDateKey,
     getDailyWord: getDailyWord,

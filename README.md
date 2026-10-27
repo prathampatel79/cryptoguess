@@ -12,7 +12,9 @@ CryptoGuess is a fast-paced, cybersecurity-themed browser word game built with v
 - **Pure Vanilla Stack**: Zero frameworks, zero compilers, zero dependencies. Runs instantly via `file://`, any static web server, or GitHub Pages.
 - **Offline-First & Local-First**: Full offline support after initial load. Personal bests, win streaks, 10 unlockable operative badges, and top-10 difficulty leaderboards are saved directly in browser `localStorage`.
 - **Wordle-Accurate Evaluation**: Multi-pass letter frequency matching correctly handles repeated letters without phantom green or amber highlights.
-- **Strict Guess Validation**: Non-dictionary words shake the active row with audio feedback and **do not consume attempts**.
+- **No-Repeat Question Deck**: Each clearance level keeps its own shuffled queue in `localStorage`, so cases do not repeat until that difficulty's pool is exhausted.
+- **Open Letter Input**: Any A–Z letter combination of the correct length is accepted as a guess. Dictionary membership is not required, but incomplete or non-letter input never consumes an attempt.
+- **Explicit Submission**: Filling the final block only displays the letter. A guess is evaluated and an attempt is consumed only after <kbd>ENTER</kbd> or the on-screen ENTER key is pressed.
 - **Four Clearance Levels + UTC Daily Cipher**:
   - **Easy**: 4–5 letter words, 6 attempts, 120-second timer.
   - **Medium**: 5–6 letter words, 6 attempts, 100-second timer.
@@ -36,10 +38,10 @@ cryptoguess/
 │   ├── app.js                # Core controller, DOM binding, timers, storage, sound & dialog flows
 │   ├── cloud.js              # Optional Firebase Realtime DB adapter with local fallback
 │   ├── firebase-config.js    # Public Firebase configuration (disabled by default)
-│   ├── game-logic.js         # Pure deterministic game engine (scoring, feedback, dictionary, pools)
-│   └── words.js              # Curated 300-word vault + 1,462 extra valid guess vocabulary
+│   ├── game-logic.js         # Pure deterministic game engine (scoring, feedback, question deck, pools)
+│   └── words.js              # Curated 300-word vault + auxiliary vocabulary list
 ├── scripts/
-│   ├── test-logic.js         # Automated regression test suite for rules, scoring & feedback
+│   ├── test-logic.js         # Automated regression suite for rules, feedback, guessing, deck & scoring
 │   └── validate-content.js   # Vocabulary validation (unique answers, clue safety, difficulty distributions)
 ├── styles.css                # Complete responsive styling, custom properties, animations & media queries
 ├── index.html                # Semantic HTML5 application shell and accessible modal dialogs
@@ -95,12 +97,12 @@ CryptoGuess is structured for immediate deployment to GitHub Pages without any b
 ## Rules of Engagement
 
 1. **Read the Intercepted Clue**: Each case displays a cryptic clue describing the secret keyword, along with the required letter count.
-2. **Submit Words via Keyboard**: Type using your physical keyboard or the on-screen cyberpunk key deck. Press <kbd>ENTER</kbd> to transmit your guess.
+2. **Submit Guesses Explicitly**: Type using your physical keyboard, the guess field, or the on-screen cyberpunk key deck. Filling the last block does not submit automatically; press <kbd>ENTER</kbd> or the on-screen ENTER key to transmit.
 3. **Decipher the Signals**:
    - <span style="color: #1fd18b; font-weight: bold;">Green</span>: Correct letter in the exact slot.
    - <span style="color: #ffb020; font-weight: bold;">Amber</span>: The letter exists in the secret key, but belongs in another slot.
    - <span style="color: #e23e5c; font-weight: bold;">Red</span>: The letter does not exist in the secret key (or all instances have already been accounted for).
-4. **Dictionary Verification**: Guesses must be recognizable English words contained within the 1,762-word dictionary. Gibberish or incomplete submissions are rejected without penalty.
+4. **Letter Validation**: Guesses must contain exactly the required number of A–Z letters. They do not need to be dictionary words, so combinations such as `WALD`, `QXYZ`, or `ZZZZ` are valid. Incomplete submissions are rejected without using an attempt.
 5. **Score Optimization**: Clearance score is calculated upon solving:
    $$\text{Score} = \text{Base} + (\text{Unused Attempts} \times \text{Bonus}) + \left(\left\lfloor\frac{\text{Seconds Left}}{10}\right\rfloor \times \text{Time Rate}\right) + \text{No-Hint Bonus} - (\text{Hints} \times \text{Penalty})$$
    *Unsuccessful cases (exhausted attempts or clock expiration) award 0 points.*
@@ -148,7 +150,7 @@ Achievements are checked and unlocked dynamically upon solving cases:
   - Hard: 80 words (all 6–7 letter answers)
   - Expert: 45 words (all 7–9 letter answers)
   - Daily: 300 words (full vault)
-- **Combined Guess Dictionary**: 1,762 valid words (300 secret words + 1,462 auxiliary guess words).
+- **Guess Format**: Any A–Z combination matching the answer length. The auxiliary vocabulary list remains bundled for reference and legacy tooling, but it no longer restricts guesses.
 
 ---
 

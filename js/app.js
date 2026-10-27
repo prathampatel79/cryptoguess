@@ -6,7 +6,7 @@
   const PROFILE_KEY = "cryptoguess.profile.v1";
   const LEADERBOARD_KEY = "cryptoguess.leaderboard.v1";
   const SETTINGS_KEY = "cryptoguess.settings.v1";
-  const DICTIONARY = DATA ? Logic.buildDictionary(DATA.words, DATA.extraGuesses) : new Set();
+  const QUESTION_DECK_KEY = "cryptoguess.questionDeck.v1";
   const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
   const MONTHS_LONG = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -33,7 +33,6 @@
     soundButton: document.getElementById("sound-button"),
     soundButtonGame: document.getElementById("sound-button-game"),
     bankCount: document.getElementById("bank-count"),
-    dictionaryCount: document.getElementById("dictionary-count"),
     startForm: document.getElementById("start-form"),
     nickname: document.getElementById("nickname"),
     nicknameError: document.getElementById("nickname-error"),
@@ -64,6 +63,9 @@
     hintClueCost: document.getElementById("hint-clue-cost"),
     board: document.getElementById("board"),
     gameMessage: document.getElementById("game-message"),
+    guessForm: document.getElementById("guess-form"),
+    guessInput: document.getElementById("guess-input"),
+    guessSubmit: document.getElementById("guess-submit"),
     keyboard: document.getElementById("keyboard"),
     guessesLeft: document.getElementById("guesses-left"),
     hintsUsed: document.getElementById("hints-used"),
@@ -117,6 +119,7 @@
   let cloudBooted = false;
   let audioContext = null;
   let shareResetTimer = null;
+  let questionDeck = null;
 
   const state = {
     status: "idle",
@@ -147,8 +150,8 @@
     newBadges: [],
     lastEntry: null,
     animatedRows: new Set(),
-    recentAnswers: [],
     caseNumber: 1,
+    submitCooldownUntil: 0,
     boardFilter: "all",
     reopenResultAfterLeaderboard: false,
     startInProgress: false
@@ -616,10 +619,26 @@
     });
   }
 
+  function syncGuessInput() {
+    if (!elements.guessInput) {
+      return;
+    }
+    const value = state.currentGuess || "";
+    if (elements.guessInput.value !== value) {
+      elements.guessInput.value = value;
+    }
+  }
+
   function setInputsEnabled(enabled) {
     Array.from(elements.keyboard.querySelectorAll(".key")).forEach(function (key) {
       key.disabled = !enabled;
     });
+    if (elements.guessInput) {
+      elements.guessInput.disabled = !enabled;
+    }
+    if (elements.guessSubmit) {
+      elements.guessSubmit.disabled = !enabled;
+    }
     updateHintButtons();
   }
 
@@ -758,7 +777,7 @@
       dateKey = daily.dateKey;
     } else {
       const pool = Logic.getModePool(DATA.words, modeKey);
-      word = Logic.pickWord(pool, Math.random, state.recentAnswers);
+      word = questionDeck ? questionDeck.draw(modeKey) : Logic.pickWord(pool, Math.random);
     }
 
     state.status = "active";
@@ -787,11 +806,7 @@
     state.lastEntry = null;
     state.animatedRows = new Set();
     state.caseNumber = profile.stats.rounds + 1;
-
-    state.recentAnswers.push(word.answer);
-    if (state.recentAnswers.length > 24) {
-      state.recentAnswers.shift();
-    }
+    state.submitCooldownUntil = 0;
 
     elements.landingView.hidden = true;
     elements.gameView.hidden = false;
@@ -799,6 +814,7 @@
 
     buildBoard();
     renderKeyboardState();
+    syncGuessInput();
     renderTimer(state.timeLimit, 1);
     updateCluePanel();
     updateStatusStrip();
@@ -814,11 +830,13 @@
     if (state.status !== "active") {
       return;
     }
-    if (state.currentGuess.length >= state.word.length) {
+    const value = String(letter || "").toUpperCase();
+    if (!/^[A-Z]$/.test(value) || state.currentGuess.length >= state.word.length) {
       return;
     }
-    state.currentGuess += letter.toUpperCase();
+    state.currentGuess += value;
     renderBoard();
+    syncGuessInput();
     if (elements.gameMessage.classList.contains("is-error")) {
       setMessage("");
     }
@@ -830,6 +848,26 @@
     }
     state.currentGuess = state.currentGuess.slice(0, -1);
     renderBoard();
+    syncGuessInput();
+  }
+
+  function handleGuessInput(event) {
+    if (state.status !== "active") {
+      event.target.value = state.currentGuess;
+      return;
+    }
+    const letters = String(event.target.value || "")
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "")
+      .slice(0, state.word.length);
+    state.currentGuess = letters;
+    if (event.target.value !== letters) {
+      event.target.value = letters;
+    }
+    renderBoard();
+    if (elements.gameMessage.classList.contains("is-error")) {
+      setMessage("");
+    }
   }
 
   function shakeActiveRow() {
@@ -849,24 +887,30 @@
     if (state.status !== "active") {
       return;
     }
-    if (!state.currentGuess) {
-      setMessage("TYPE A WORD TO BEGIN THE DECRYPTION.", "error");
-      playSfx("invalid");
+    const now = Date.now();
+    if (now < state.submitCooldownUntil) {
       return;
     }
-    if (state.currentGuess.length < state.word.length) {
-      setMessage("NOT ENOUGH LETTERS // " + state.currentGuess.length + " OF " + state.word.length, "error");
+    if (!state.currentGuess) {
+      setMessage("FILL ALL THE LETTERS FIRST // 0 OF " + state.word.length, "error");
       shakeActiveRow();
       playSfx("invalid");
       return;
     }
-    if (!Logic.isValidGuess(DICTIONARY, state.currentGuess, state.word.length)) {
-      setMessage("WORD NOT IN THE DICTIONARY // ATTEMPT NOT USED", "error");
+    if (state.currentGuess.length !== state.word.length) {
+      setMessage("FILL ALL THE LETTERS FIRST // " + state.currentGuess.length + " OF " + state.word.length, "error");
+      shakeActiveRow();
+      playSfx("invalid");
+      return;
+    }
+    if (!Logic.isGuessFormatValid(state.currentGuess, state.word.length)) {
+      setMessage("USE LETTERS A-Z ONLY // ATTEMPT NOT USED", "error");
       shakeActiveRow();
       playSfx("invalid");
       return;
     }
 
+    state.submitCooldownUntil = now + 300;
     const guess = state.currentGuess;
     const results = Logic.evaluateGuess(state.word.answer, guess);
     const solved = Logic.isSolved(results);
@@ -875,9 +919,7 @@
     state.guesses.push(guess);
     state.results.push(results);
     state.keyStates = Logic.mergeKeyboardState(state.keyStates, guess, results);
-    state.currentGuess = "";
     state.animatedRows.add(rowIndex);
-
     renderKeyboardState();
 
     if (solved) {
@@ -891,6 +933,8 @@
       return;
     }
 
+    state.currentGuess = "";
+    syncGuessInput();
     renderBoard();
     updateStatusStrip();
     const left = state.attempts - state.guesses.length;
@@ -1519,6 +1563,9 @@
     if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable)) {
       return;
     }
+    if (event.ctrlKey || event.metaKey || event.altKey) {
+      return;
+    }
 
     if (event.key === "Enter") {
       event.preventDefault();
@@ -1581,6 +1628,15 @@
 
     elements.keyboard.addEventListener("click", handleKeyboardClick);
     document.addEventListener("keydown", handleKeyboardKey);
+    if (elements.guessForm) {
+      elements.guessForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        submitGuess();
+      });
+    }
+    if (elements.guessInput) {
+      elements.guessInput.addEventListener("input", handleGuessInput);
+    }
 
     elements.hintLetterButton.addEventListener("click", function () {
       useHint("letter");
@@ -1690,14 +1746,34 @@
       return;
     }
 
+    questionDeck = Logic.createQuestionDeck(DATA.words, {
+      storage: {
+        getItem: function (key) {
+          try {
+            return window.localStorage.getItem(key);
+          } catch (error) {
+            return null;
+          }
+        },
+        setItem: function (key, value) {
+          try {
+            window.localStorage.setItem(key, value);
+          } catch (error) {
+            // The in-memory deck still prevents repeats for this session.
+          }
+        }
+      },
+      storageKey: QUESTION_DECK_KEY
+    });
+
     buildKeyboard();
     bindEvents();
     setInputsEnabled(false);
     syncSoundButtons();
+    syncGuessInput();
     setSelectedMode(profile.lastMode || "easy");
     elements.nickname.value = profile.nickname || "";
     elements.bankCount.textContent = String(DATA.words.length);
-    elements.dictionaryCount.textContent = new Intl.NumberFormat("en-US").format(DICTIONARY.size);
     updateLandingStats();
     updateDailyLabels();
     updateCloudUi();

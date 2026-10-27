@@ -44,6 +44,8 @@
 html {
   color-scheme: dark;
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -190,6 +192,7 @@ kbd {
   min-height: var(--header-height);
   margin: 0 auto;
   padding: 16px clamp(18px, 4vw, 48px);
+  padding: calc(16px + env(safe-area-inset-top)) max(clamp(18px, 4vw, 48px), env(safe-area-inset-right)) 16px max(clamp(18px, 4vw, 48px), env(safe-area-inset-left));
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -329,6 +332,7 @@ main {
   width: min(1280px, 100%);
   margin: 0 auto;
   padding: 26px clamp(18px, 4vw, 48px) 56px;
+  padding: 26px max(clamp(18px, 4vw, 48px), env(safe-area-inset-right)) calc(56px + env(safe-area-inset-bottom)) max(clamp(18px, 4vw, 48px), env(safe-area-inset-left));
   animation: viewIn 0.42s ease both;
 }
 
@@ -412,7 +416,7 @@ main {
     0 8px 28px rgba(0, 194, 184, 0.18);
 }
 
-.title-accent::after {
+/* .title-accent::after {
   content: "";
   position: absolute;
   left: 0.04em;
@@ -423,7 +427,7 @@ main {
   background: linear-gradient(90deg, var(--cyan), var(--teal));
   box-shadow: 0 0 12px rgba(0, 229, 255, 0.35);
   animation: none;
-}
+} */
 
 @keyframes blink {
   0%,
@@ -1606,7 +1610,8 @@ main {
 
 .guess-submit {
   flex: 0 0 auto;
-  min-height: 38px;
+  min-height: 44px;
+  touch-action: manipulation;
   padding: 0 16px;
   border: 1px solid transparent;
   border-radius: 5px;
@@ -1669,8 +1674,11 @@ main {
   flex: 1 1 0;
   min-width: 0;
   max-width: 48px;
-  height: clamp(38px, 5.8vw, 48px);
+  height: clamp(40px, 5.8vw, 48px);
   place-items: center;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
   border: 1px solid rgba(174, 160, 208, 0.2);
   border-radius: 4px;
   background: rgba(30, 14, 58, 0.76);
@@ -1689,7 +1697,15 @@ main {
 }
 
 .key:active:not(:disabled) {
-  transform: scale(0.95);
+  transform: scale(0.94);
+  border-color: var(--cyan);
+  background: rgba(0, 229, 255, 0.18);
+  color: var(--cyan-bright);
+}
+
+.key:disabled {
+  opacity: 0.38;
+  filter: saturate(0.35);
 }
 
 .key.is-wide {
@@ -2756,6 +2772,12 @@ main {
   .view {
     padding-top: 14px;
     padding-bottom: 36px;
+    padding-bottom: calc(36px + env(safe-area-inset-bottom));
+  }
+
+  .input-wrap input,
+  .guess-field input {
+    font-size: 16px;
   }
 
   .status-strip {
@@ -2812,7 +2834,7 @@ main {
   }
 
   .key {
-    height: 42px;
+    height: 44px;
   }
 
   .key.is-wide {
@@ -3056,7 +3078,7 @@ main {
   }
 
   .key {
-    height: 39px;
+    height: 44px;
     border-radius: 3px;
   }
 
@@ -3071,6 +3093,13 @@ main {
 
   .keyboard-row {
     gap: 3px;
+  }
+
+  .view {
+    padding-right: 12px;
+    padding-left: 12px;
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-left: max(12px, env(safe-area-inset-left));
   }
 
   .tile {
@@ -3143,8 +3172,21 @@ main {
 @media (max-width: 345px) {
   .site-header {
     gap: 4px;
-    padding-right: 12px;
-    padding-left: 12px;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-left: max(10px, env(safe-area-inset-left));
+  }
+
+  .view {
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-left: max(10px, env(safe-area-inset-left));
+  }
+
+  .keyboard-row {
+    gap: 2px;
   }
 
   .brand-copy {
